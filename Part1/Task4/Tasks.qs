@@ -1,6 +1,9 @@
 namespace QCHack.Task4 {
+    open Microsoft.Quantum.Logical;
+    open Microsoft.Quantum.Arrays;
     open Microsoft.Quantum.Canon;
     open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Diagnostics;
 
     // Task 4 (12 points). f(x) = 1 if the graph edge coloring is triangle-free
     // 
@@ -38,27 +41,50 @@ namespace QCHack.Task4 {
     //       using Message function for classical values and DumpMachine for quantum states.
     //
     
-operation Task2_ValidTriangle (inputs : Qubit[], output : Qubit) : Unit is Adj+Ctl {
-        use a = Qubit[2];
-    CNOT(inputs[0],a[0]);
-    CNOT(inputs[1],a[0]);
-    
-    CNOT(inputs[1],a[1]);
-    CNOT(inputs[2],a[1]);
-    
-    CNOT(a[0],output);
-    CNOT(a[1],output);
-    CCNOT(a[0],a[1],output);
-    
-    // Resetting to 0
-    CNOT(inputs[2],a[1]);
-    CNOT(inputs[1],a[1]);
+    /// # Summary
+    ///     Function to calculate whether all edges are of the same colour
+    /// # Input
+    /// ## inputs : Qubit Array of length 3, each qubit representing an edge colour
+    /// 
+    /// ## output : Qubit. 0 -> All edges are of same colour. 1 -> Edges of the triangle have different colour
+    /// 
+    internal operation IsValidTriangle ( inputs: Qubit[], output : Qubit) : Unit is Adj+Ctl {
+        within{
+            CNOT(inputs[0],inputs[1]);
+            CNOT(inputs[0],inputs[2]);
+            ApplyToEachA(X,inputs[1..2]);
+        }
+        apply{
+            CCNOT(inputs[1],inputs[2],output);
+            //X(output);
+        }
+    }
 
-    CNOT(inputs[1],a[0]);
-    CNOT(inputs[0],a[0]);
-    
-    X(output);
-    X(output);
+    /// # Summary
+    ///     Function to calculate whether edges form a triangle
+    /// # Input
+    /// ## edges: Input Edges
+    /// 
+    /// # Output: 0 -> Not a Triangle ; 1 -> Triangle
+    /// 
+    function AreEdgesTriangle(edgeA : (Int, Int),
+                                        edgeB : (Int, Int),
+                                        edgeC : (Int, Int)): Bool{
+        let (edge0,edge1) = edgeA;
+        let (edge2,edge3) = edgeB;
+        let (edge4,edge5) = edgeC;
+
+        let vertices = [edge0,edge1,edge3,edge3,edge4,edge5];
+        let un_sort_vertices = Unique(EqualI,Sorted(LessThanOrEqualI,vertices));
+
+        let size = Length(un_sort_vertices);
+
+        if size == 3 { 
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
 
@@ -69,36 +95,31 @@ operation Task2_ValidTriangle (inputs : Qubit[], output : Qubit) : Unit is Adj+C
         target : Qubit
     ) : Unit is Adj+Ctl {
         let nEdges = Length(edges);
-    let count = nEdges*(nEdges-1)*(nEdges-2)/6;
-    //Message($"Number of loops: {count}");        
+        let count = nEdges*(nEdges-1)*(nEdges-2)/6;
+        //Message($"Number of loops: {count}");        
 
-    use conflictQubits = Qubit[count];
-    within {
-        for i in 0..nEdges-3{
-            for j in i+1..nEdges-2{
-                for k in j+1..nEdges-1{
-                    let (a0,a1) = edges[i];
-                    let (b0,b1) = edges[j];
-                    let (c0,c1) = edges[k];
-                    //Message($"{edges[i]}-> {a0},{a1}|{edges[j]} -> {b0},{b1}|{edges[k]} -> {c0},{c1}");
-                    let colVec = [colorsRegister[i],colorsRegister[j],colorsRegister[k]];
-                    //Message($"Colours:{colVec}");
-                    
-                    //Message("State before applying the marking oracle:");
-                    //DumpMachine();
+        use conflictQubits = Qubit[count];
+        within {
+            for i in 0..nEdges-3{
+                for j in i+1..nEdges-2{
+                    for k in j+1..nEdges-1{
+                        let (edge0,edge1) = edges[i];
+                        let (edge2,edge3) = edges[j];
+                        let (edge4,edge5) = edges[k];
 
-                    Task2_ValidTriangle(colVec, conflictQubits[0]);
-
-                    // Print the resulting state; notice which amplitudes changed
-                    //Message("State after applying the marking oracle:");
-                    //DumpMachine();
+                        if AreEdgesTriangle(edges[i], edges[j], edges[k]){
+                            let colVec = [colorsRegister[i],colorsRegister[j],colorsRegister[k]];
+                            IsValidTriangle(colVec, conflictQubits[0]);
+                        }
+                        DumpMachine();
+                    }
                 }
             }
+        } 
+        apply {
+            //If there are no conflicts (all qubits are in 0 state), the vertex coloring is valid.
+            (ControlledOnInt(0, X))(conflictQubits, target);
         }
-    } apply {
-         //If there are no conflicts (all qubits are in 0 state), the vertex coloring is valid.
-        (ControlledOnInt(0, X))(conflictQubits, target);
-    }
     }
 }
 
