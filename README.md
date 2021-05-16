@@ -1,9 +1,10 @@
-#Team 
--Name: Rohitashwa Chakraborty / Discord: captain._nemo#5645
--Name: Abhimanyu Kumbhar / Discord: Abhimanyu#4610
--Name: Santanu Banerjee / Discord: santanubanerjee#3199
--Name: Noura Abdelhafez / Discord : Noura A#7154
--Name:  Furkan Eşref Yazıcı / Discord: Nonsensicalinsane#5905
+# Team:
+## AC/QC
+-**_Name:_** Rohitashwa Chakraborty / **_Discord:_** captain._nemo#5645
+-**_Name:_** Abhimanyu Kumbhar / **_Discord:_** Abhimanyu#4610
+-**_Name:_** Santanu Banerjee / **_Discord:_** santanubanerjee#3199
+-**_Name:_** Noura Abdelhafez / **_Discord:_** Noura A#7154
+-**_Name:_**  Furkan Eşref Yazıcı / **_Discord:_** Nonsensicalinsane#5905
 
 
 
